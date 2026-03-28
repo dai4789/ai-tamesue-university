@@ -61,8 +61,13 @@ async def lifespan(app: FastAPI):
     global search_engine, ai_responder
     from .search_engine import SearchEngine
     from .ai_responder import AIResponder
+    from .video_fetcher import fetch_and_update_videos
 
     print("🚀 AI為末大学を起動中...")
+
+    # YouTube APIから動画データを取得・更新
+    fetch_and_update_videos()
+
     search_engine = SearchEngine()
     ai_responder = AIResponder(search_engine=search_engine)
     print(f"✅ 準備完了 (動画数: {search_engine.total_videos})")
