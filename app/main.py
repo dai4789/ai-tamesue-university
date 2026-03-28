@@ -55,23 +55,37 @@ search_engine = None
 ai_responder = None
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """アプリ起動・終了時の処理"""
+async def _load_videos_background():
+    """バックグラウンドで動画データを読み込む"""
     global search_engine, ai_responder
+    import asyncio
     from .search_engine import SearchEngine
     from .ai_responder import AIResponder
     from .video_fetcher import fetch_and_update_videos
 
-    print("🚀 AI為末大学を起動中...")
-
-    # YouTube APIから動画データを取得・更新
-    fetch_and_update_videos()
+    # ブロッキング処理を別スレッドで実行
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, fetch_and_update_videos)
 
     search_engine = SearchEngine()
     ai_responder = AIResponder(search_engine=search_engine)
     print(f"✅ 準備完了 (動画数: {search_engine.total_videos})")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """アプリ起動・終了時の処理"""
+    import asyncio
+
+    print("🚀 AI為末大学を起動中...")
+    print("📡 サーバーを先に起動し、動画データはバックグラウンドで読み込みます")
+
+    # バックグラウンドタスクとして動画読み込みを開始
+    task = asyncio.create_task(_load_videos_background())
+
     yield
+
+    task.cancel()
     print("👋 AI為末大学を終了")
 
 
