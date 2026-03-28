@@ -10,19 +10,45 @@ import json
 import hashlib
 import hmac
 import base64
+import time
 from pathlib import Path
 from contextlib import asynccontextmanager
+from collections import defaultdict
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 import httpx
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+# ─── レート制限 ─────────────────────────────────────────
+class RateLimiter:
+    """シンプルなIPベースレート制限"""
+    def __init__(self, max_requests: int = 10, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._requests: dict[str, list[float]] = defaultdict(list)
+
+    def is_allowed(self, client_ip: str) -> bool:
+        now = time.time()
+        # 古いリクエストを削除
+        self._requests[client_ip] = [
+            t for t in self._requests[client_ip]
+            if now - t < self.window_seconds
+        ]
+        if len(self._requests[client_ip]) >= self.max_requests:
+            return False
+        self._requests[client_ip].append(now)
+        return True
+
+rate_limiter = RateLimiter(max_requests=10, window_seconds=60)
 
 # ─── アプリ起動時に検索エンジンとAIを初期化 ──────────────
 search_engine = None
@@ -50,6 +76,29 @@ app = FastAPI(
     description="為末大学 YouTube動画のAIアシスタント",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=None,      # 本番ではSwagger UIを無効化
+    redoc_url=None,      # 本番ではReDocも無効化
+)
+
+# セキュリティヘッダー
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+# CORS設定（必要なオリジンだけ許可）
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "").split(",")
+ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS else ["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # 静的ファイルとテンプレート
@@ -60,8 +109,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # ─── リクエスト/レスポンスモデル ─────────────────────────
 class QuestionRequest(BaseModel):
-    question: str
-    n_videos: int = 3
+    question: str = Field(..., min_length=1, max_length=500)
+    n_videos: int = Field(3, ge=1, le=5)
 
 
 class VideoRecommendation(BaseModel):
@@ -95,12 +144,17 @@ async def home(request: Request):
 
 
 @app.post("/api/ask", response_model=AnswerResponse)
-async def ask_question(req: QuestionRequest):
+async def ask_question(req: QuestionRequest, request: Request):
     """
     質問API
 
     ユーザーの質問を受け取り、AIコメント + 動画推薦を返します。
     """
+    # レート制限チェック
+    client_ip = request.client.host if request.client else "unknown"
+    if not rate_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="リクエストが多すぎます。少し待ってから再度お試しください。")
+
     if not req.question.strip():
         raise HTTPException(status_code=400, detail="質問を入力してください")
 
@@ -124,10 +178,7 @@ async def ask_question(req: QuestionRequest):
 @app.get("/api/health")
 async def health_check():
     """ヘルスチェック"""
-    return {
-        "status": "ok",
-        "total_videos": search_engine.total_videos if search_engine else 0,
-    }
+    return {"status": "ok"}
 
 
 # ─── LINE Bot Webhook ──────────────────────────────────
@@ -164,7 +215,7 @@ async def send_line_reply(reply_token: str, messages: list[dict]):
             },
         )
         if resp.status_code != 200:
-            print(f"LINE API Error: {resp.status_code} {resp.text}")
+            print(f"LINE API Error: {resp.status_code}")
 
 
 def build_line_flex_message(ai_response) -> dict:
