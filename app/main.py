@@ -103,7 +103,9 @@ app.add_middleware(
 
 # 静的ファイルとテンプレート
 BASE_DIR = Path(__file__).parent.parent
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+static_dir = BASE_DIR / "static"
+static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
