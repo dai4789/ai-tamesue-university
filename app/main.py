@@ -1,0 +1,319 @@
+"""
+AI為末大学 - メインアプリケーション
+
+FastAPIベースのWebサーバー。
+Web API + LINE Bot Webhook + デモUI を提供します。
+"""
+
+import os
+import json
+import hashlib
+import hmac
+import base64
+from pathlib import Path
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+import httpx
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ─── アプリ起動時に検索エンジンとAIを初期化 ──────────────
+search_engine = None
+ai_responder = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """アプリ起動・終了時の処理"""
+    global search_engine, ai_responder
+    from .search_engine import SearchEngine
+    from .ai_responder import AIResponder
+
+    print("🚀 AI為末大学を起動中...")
+    search_engine = SearchEngine()
+    ai_responder = AIResponder(search_engine=search_engine)
+    print(f"✅ 準備完了 (動画数: {search_engine.total_videos})")
+    yield
+    print("👋 AI為末大学を終了")
+
+
+# ─── FastAPIアプリ ──────────────────────────────────────
+app = FastAPI(
+    title="AI為末大学",
+    description="為末大学 YouTube動画のAIアシスタント",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# 静的ファイルとテンプレート
+BASE_DIR = Path(__file__).parent.parent
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+# ─── リクエスト/レスポンスモデル ─────────────────────────
+class QuestionRequest(BaseModel):
+    question: str
+    n_videos: int = 3
+
+
+class VideoRecommendation(BaseModel):
+    video_id: str
+    title: str
+    url: str
+    thumbnail: str
+    upload_date: str = ""
+    categories: list[str] = []
+    reason: str = ""
+    relevance_score: float = 0.0
+
+
+class AnswerResponse(BaseModel):
+    comment: str
+    recommended_videos: list[VideoRecommendation]
+    query: str
+
+
+# ─── Web API エンドポイント ──────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    """デモUI（トップページ）"""
+    total = search_engine.total_videos if search_engine else 0
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"total_videos": total},
+    )
+
+
+@app.post("/api/ask", response_model=AnswerResponse)
+async def ask_question(req: QuestionRequest):
+    """
+    質問API
+
+    ユーザーの質問を受け取り、AIコメント + 動画推薦を返します。
+    """
+    if not req.question.strip():
+        raise HTTPException(status_code=400, detail="質問を入力してください")
+
+    if not ai_responder:
+        raise HTTPException(status_code=503, detail="サーバー準備中です")
+
+    result = ai_responder.generate_response(
+        query=req.question.strip(),
+        n_videos=req.n_videos,
+    )
+
+    return AnswerResponse(
+        comment=result.comment,
+        recommended_videos=[
+            VideoRecommendation(**v) for v in result.recommended_videos
+        ],
+        query=result.query,
+    )
+
+
+@app.get("/api/health")
+async def health_check():
+    """ヘルスチェック"""
+    return {
+        "status": "ok",
+        "total_videos": search_engine.total_videos if search_engine else 0,
+    }
+
+
+# ─── LINE Bot Webhook ──────────────────────────────────
+
+LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
+LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET", "")
+
+
+def verify_line_signature(body: bytes, signature: str) -> bool:
+    """LINE Webhookの署名検証"""
+    if not LINE_CHANNEL_SECRET:
+        return False
+    hash_value = hmac.new(
+        LINE_CHANNEL_SECRET.encode("utf-8"),
+        body,
+        hashlib.sha256,
+    ).digest()
+    expected = base64.b64encode(hash_value).decode("utf-8")
+    return hmac.compare_digest(expected, signature)
+
+
+async def send_line_reply(reply_token: str, messages: list[dict]):
+    """LINE Messaging APIでリプライを送信"""
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.line.me/v2/bot/message/reply",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
+            },
+            json={
+                "replyToken": reply_token,
+                "messages": messages,
+            },
+        )
+        if resp.status_code != 200:
+            print(f"LINE API Error: {resp.status_code} {resp.text}")
+
+
+def build_line_flex_message(ai_response) -> dict:
+    """AI回答をLINE Flex Messageに変換"""
+    # コメント部分
+    bubbles = []
+
+    # メインのコメントバブル
+    comment_bubble = {
+        "type": "bubble",
+        "size": "mega",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "🎓 AI為末大学",
+                    "weight": "bold",
+                    "size": "lg",
+                    "color": "#1a73e8",
+                }
+            ],
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": ai_response.comment,
+                    "wrap": True,
+                    "size": "sm",
+                    "color": "#333333",
+                }
+            ],
+        },
+    }
+    bubbles.append(comment_bubble)
+
+    # 動画推薦バブル
+    for video in ai_response.recommended_videos[:3]:
+        video_bubble = {
+            "type": "bubble",
+            "size": "mega",
+            "hero": {
+                "type": "image",
+                "url": video["thumbnail"],
+                "size": "full",
+                "aspectRatio": "16:9",
+                "aspectMode": "cover",
+                "action": {
+                    "type": "uri",
+                    "uri": video["url"],
+                },
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": video["title"][:60],
+                        "weight": "bold",
+                        "size": "sm",
+                        "wrap": True,
+                    },
+                    {
+                        "type": "text",
+                        "text": f"📌 {video['reason']}",
+                        "size": "xs",
+                        "color": "#666666",
+                        "wrap": True,
+                        "margin": "md",
+                    },
+                ],
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "color": "#FF0000",
+                        "action": {
+                            "type": "uri",
+                            "label": "▶ 動画を見る",
+                            "uri": video["url"],
+                        },
+                    }
+                ],
+            },
+        }
+        bubbles.append(video_bubble)
+
+    return {
+        "type": "flex",
+        "altText": f"🎓 AI為末大学: {ai_response.comment[:100]}",
+        "contents": {
+            "type": "carousel",
+            "contents": bubbles,
+        },
+    }
+
+
+@app.post("/webhook/line")
+async def line_webhook(request: Request):
+    """LINE Bot Webhookエンドポイント"""
+    body = await request.body()
+    signature = request.headers.get("x-line-signature", "")
+
+    # 署名検証
+    if LINE_CHANNEL_SECRET and not verify_line_signature(body, signature):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    data = json.loads(body)
+
+    for event in data.get("events", []):
+        if event["type"] == "message" and event["message"]["type"] == "text":
+            user_message = event["message"]["text"]
+            reply_token = event["replyToken"]
+
+            # AI回答を生成
+            if ai_responder:
+                result = ai_responder.generate_response(
+                    query=user_message,
+                    n_videos=3,
+                )
+
+                # Flex Messageを構築
+                flex_msg = build_line_flex_message(result)
+                await send_line_reply(reply_token, [flex_msg])
+            else:
+                await send_line_reply(reply_token, [{
+                    "type": "text",
+                    "text": "申し訳ありません。現在準備中です。しばらくお待ちください。",
+                }])
+
+    return JSONResponse(content={"status": "ok"})
+
+
+# ─── 起動 ────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "8000")),
+        reload=True,
+    )

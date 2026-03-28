@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI為末大学 | Tamesue Academy</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --accent: #ff4444;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #e0e0e0;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .header-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo { font-size: 28px; }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .header h1 span {
+            color: var(--primary);
+        }
+        .badge {
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* メインコンテンツ */
+        .main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px 120px;
+        }
+
+        /* 説明エリア */
+        .intro {
+            text-align: center;
+            padding: 40px 20px 32px;
+        }
+        .intro h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .intro p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .stats {
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* サンプル質問 */
+        .samples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .sample-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .sample-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #e8f0fe;
+        }
+
+        /* 入力エリア */
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 16px 20px;
+            z-index: 100;
+        }
+        .input-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+        }
+        .input-inner input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-inner input:focus {
+            border-color: var(--primary);
+        }
+        .input-inner button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .input-inner button:hover {
+            background: var(--primary-dark);
+        }
+        .input-inner button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 結果エリア */
+        .results {
+            margin-top: 16px;
+        }
+
+        /* AI コメント */
+        .ai-comment {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+        }
+        .ai-comment .label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .ai-comment .text {
+            font-size: 15px;
+            line-height: 1.8;
+            color: var(--text);
+        }
+
+        /* 動画カード */
+        .video-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin: 24px 0 12px;
+            padding-left: 4px;
+        }
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+        .video-card:hover {
+            transform: translateY(-2px);
+        }
+        .video-card a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            gap: 0;
+        }
+        .video-thumb {
+            width: 200px;
+            min-width: 200px;
+            height: 112px;
+            object-fit: cover;
+            background: #eee;
+        }
+        .video-info {
+            padding: 12px 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .video-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .video-reason {
+            font-size: 12px;
+            color: var(--primary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .video-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ローディング */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* エラー */
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: #dc2626;
+            font-size: 14px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 600px) {
+            .video-card a { flex-direction: column; }
+            .video-thumb { width: 100%; height: 180px; min-width: auto; }
+            .intro h2 { font-size: 20px; }
+            .samples { gap: 6px; }
+            .sample-btn { font-size: 12px; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <div class="header">
+        <div class="header-inner">
+            <div class="logo">🎓</div>
+            <h1>AI<span>為末大学</span></h1>
+            <div class="badge">AI</div>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <div class="main">
+        <div class="intro">
+            <h2>何でも聞いてください</h2>
+            <p>走り方、トレーニング、メンタル、子どもの運動…<br>
+            為末大学の動画から、あなたの質問にお答えします。</p>
+            <div class="stats">📹 {{ total_videos }} 本の動画から検索</div>
+
+            <div class="samples">
+                <button class="sample-btn" onclick="askSample(this)">速く走るコツは？</button>
+                <button class="sample-btn" onclick="askSample(this)">子どもの足が遅いのですが</button>
+                <button class="sample-btn" onclick="askSample(this)">試合で緊張してしまう</button>
+                <button class="sample-btn" onclick="askSample(this)">腕振りのポイント</button>
+                <button class="sample-btn" onclick="askSample(this)">怪我の予防法</button>
+                <button class="sample-btn" onclick="askSample(this)">モチベーションが続かない</button>
+            </div>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <!-- 入力エリア -->
+    <div class="input-area">
+        <div class="input-inner">
+            <input type="text" id="question" placeholder="質問を入力してください..."
+                   onkeydown="if(event.key==='Enter')askQuestion()">
+            <button id="askBtn" onclick="askQuestion()">質問する</button>
+        </div>
+    </div>
+
+    <script>
+        const resultsEl = document.getElementById('results');
+        const questionEl = document.getElementById('question');
+        const askBtn = document.getElementById('askBtn');
+
+        function askSample(btn) {
+            questionEl.value = btn.textContent;
+            askQuestion();
+        }
+
+        async function askQuestion() {
+            const q = questionEl.value.trim();
+            if (!q) return;
+
+            // UI更新
+            askBtn.disabled = true;
+            resultsEl.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">考え中...</div>
+                </div>
+            `;
+
+            try {
+                const resp = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: q, n_videos: 3 }),
+                });
+
+                if (!resp.ok) {
+                    throw new Error(`Error: ${resp.status}`);
+                }
+
+                const data = await resp.json();
+                renderResults(data);
+            } catch (err) {
+                resultsEl.innerHTML = `
+                    <div class="error">
+                        エラーが発生しました: ${err.message}<br>
+                        しばらくしてからもう一度お試しください。
+                    </div>
+                `;
+            } finally {
+                askBtn.disabled = false;
+            }
+        }
+
+        function renderResults(data) {
+            let html = '';
+
+            // AIコメント
+            html += `
+                <div class="ai-comment">
+                    <div class="label">🎓 AI為末大学の回答</div>
+                    <div class="text">${escapeHtml(data.comment)}</div>
+                </div>
+            `;
+
+            // 動画推薦
+            if (data.recommended_videos && data.recommended_videos.length > 0) {
+                html += '<div class="video-section-title">📹 おすすめ動画</div>';
+                for (const v of data.recommended_videos) {
+                    html += `
+                        <div class="video-card">
+                            <a href="${escapeHtml(v.url)}" target="_blank" rel="noopener">
+                                <img class="video-thumb"
+                                     src="${escapeHtml(v.thumbnail)}"
+                                     alt="${escapeHtml(v.title)}"
+                                     onerror="this.src='https://img.youtube.com/vi/${escapeHtml(v.video_id)}/hqdefault.jpg'">
+                                <div class="video-info">
+                                    <div class="video-title">${escapeHtml(v.title)}</div>
+                                    <div class="video-reason">📌 ${escapeHtml(v.reason)}</div>
+                                    ${v.categories && v.categories.length ? `<div class="video-meta">${v.categories.join(' / ')}</div>` : ''}
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+
+            resultsEl.innerHTML = html;
+            resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

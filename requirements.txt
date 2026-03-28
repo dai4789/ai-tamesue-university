@@ -1,0 +1,27 @@
+# AI Tamesue University - Dependencies
+fastapi==0.115.0
+uvicorn==0.30.0
+python-dotenv==1.0.1
+httpx[socks]==0.27.0
+
+# YouTube transcript extraction
+youtube-transcript-api==1.2.4
+yt-dlp==2024.12.23
+
+# Search (TF-IDF, lightweight)
+scikit-learn>=1.3.0
+numpy>=1.24.0
+
+# Anthropic API for response generation
+anthropic==0.40.0
+
+# LINE Bot SDK
+line-bot-sdk==3.11.0
+
+# Web scraping
+beautifulsoup4==4.12.3
+
+# Utilities
+pydantic==2.9.0
+jinja2==3.1.4
+aiofiles==24.1.0
