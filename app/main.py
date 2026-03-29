@@ -210,7 +210,7 @@ async def export_videos():
     import json as _json
     # transcriptとdescriptionは除外して軽量化
     videos = []
-    for v in search_engine.videos:
+    for v in search_engine._videos:
         videos.append({
             "video_id": str(v.get("video_id", "")),
             "title": str(v.get("title", "")),
@@ -252,7 +252,7 @@ async def suggest_clips_api(req: ClipSuggestRequest, request: Request):
     if req.video_id:
         # 特定の動画を分析
         video_data = None
-        for v in search_engine.videos:
+        for v in search_engine._videos:
             if v["video_id"] == req.video_id:
                 video_data = v
                 break
@@ -278,7 +278,7 @@ async def suggest_clips_api(req: ClipSuggestRequest, request: Request):
         clips = await loop.run_in_executor(
             None,
             lambda: suggest_clips_from_library(
-                search_engine.videos, req.n_videos, req.n_clips,
+                search_engine._videos, req.n_videos, req.n_clips,
             ),
         )
 
