@@ -23,7 +23,7 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 VIDEOS_FILE = DATA_DIR / "videos.json"
 
 
-def fetch_transcript(ytt_api, video_id: str) -> str | None:
+def fetch_transcript(ytt_api, video_id, transcript_list=None):
     from youtube_transcript_api._errors import (
         TranscriptsDisabled, NoTranscriptFound, VideoUnavailable,
     )
