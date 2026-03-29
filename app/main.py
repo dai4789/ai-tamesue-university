@@ -202,6 +202,61 @@ async def health_check():
     return {"status": "ok"}
 
 
+# ─── ショート動画クリップ提案 API ─────────────────────────
+
+class ClipSuggestRequest(BaseModel):
+    video_id: str | None = Field(None, description="特定の動画IDを指定（省略時は人気動画から自動選択）")
+    n_clips: int = Field(3, ge=1, le=5, description="提案するクリップ数")
+    n_videos: int = Field(3, ge=1, le=10, description="分析する動画数（video_id省略時）")
+
+
+@app.post("/api/suggest-clips")
+async def suggest_clips_api(req: ClipSuggestRequest, request: Request):
+    """
+    ショート動画クリップ提案API
+
+    YouTube長尺動画からAIが最適な30-60秒クリップを提案します。
+    Instagram Reels / TikTok / YouTube Shorts 向け。
+    """
+    import asyncio
+    from .clip_suggester import suggest_clips, suggest_clips_from_library
+
+    if not search_engine:
+        raise HTTPException(status_code=503, detail="サーバー準備中です")
+
+    loop = asyncio.get_event_loop()
+
+    if req.video_id:
+        # 特定の動画を分析
+        # タイトルを取得
+        video_data = None
+        for v in search_engine.videos:
+            if v["video_id"] == req.video_id:
+                video_data = v
+                break
+
+        if not video_data:
+            raise HTTPException(status_code=404, detail="動画が見つかりません")
+
+        clips = await loop.run_in_executor(
+            None,
+            lambda: suggest_clips(req.video_id, video_data["title"], req.n_clips),
+        )
+    else:
+        # 人気動画から自動提案
+        clips = await loop.run_in_executor(
+            None,
+            lambda: suggest_clips_from_library(
+                search_engine.videos, req.n_videos, req.n_clips,
+            ),
+        )
+
+    return {
+        "total_clips": len(clips),
+        "clips": clips,
+    }
+
+
 # ─── LINE Bot Webhook ──────────────────────────────────
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
