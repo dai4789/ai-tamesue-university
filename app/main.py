@@ -207,20 +207,19 @@ async def export_videos():
     """動画データをエクスポート（ローカルスクリプト用）"""
     if not search_engine:
         raise HTTPException(status_code=503, detail="動画データ読み込み中です")
-    # transcriptは大きいので除外し、IDとメタデータのみ返す
+    import json as _json
+    # transcriptとdescriptionは除外して軽量化
     videos = []
     for v in search_engine.videos:
         videos.append({
-            "video_id": v["video_id"],
-            "title": v["title"],
-            "description": v.get("description", ""),
-            "upload_date": v.get("upload_date", ""),
-            "duration_seconds": v.get("duration_seconds", 0),
-            "view_count": v.get("view_count", 0),
-            "url": v.get("url", ""),
-            "thumbnail": v.get("thumbnail", ""),
+            "video_id": str(v.get("video_id", "")),
+            "title": str(v.get("title", "")),
+            "upload_date": str(v.get("upload_date", "")),
+            "duration_seconds": int(v.get("duration_seconds", 0) or 0),
+            "view_count": int(v.get("view_count", 0) or 0),
+            "url": str(v.get("url", "")),
+            "thumbnail": str(v.get("thumbnail", "")),
             "categories": v.get("categories", []),
-            "transcript": v.get("transcript"),
         })
     return JSONResponse(content=videos)
 
