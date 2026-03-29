@@ -221,29 +221,26 @@ async def suggest_clips_api(req: ClipSuggestRequest, request: Request):
     import asyncio
     from .clip_suggester import suggest_clips, suggest_clips_from_library
 
-    if not search_engine:
-        raise HTTPException(status_code=503, detail="サーバー準備中です")
-
     loop = asyncio.get_event_loop()
 
     if req.video_id:
-        # 特定の動画を分析
-        # タイトルを取得
-        video_data = None
-        for v in search_engine.videos:
-            if v["video_id"] == req.video_id:
-                video_data = v
-                break
-
-        if not video_data:
-            raise HTTPException(status_code=404, detail="動画が見つかりません")
+        # 特定の動画IDが指定された場合、ライブラリ読み込み完了を待たずに処理可能
+        video_title = req.video_id  # デフォルト
+        if search_engine:
+            for v in search_engine.videos:
+                if v["video_id"] == req.video_id:
+                    video_title = v["title"]
+                    break
 
         clips = await loop.run_in_executor(
             None,
-            lambda: suggest_clips(req.video_id, video_data["title"], req.n_clips),
+            lambda: suggest_clips(req.video_id, video_title, req.n_clips),
         )
     else:
-        # 人気動画から自動提案
+        # ライブラリから自動選択する場合は読み込み完了が必要
+        if not search_engine:
+            raise HTTPException(status_code=503, detail="サーバー準備中です。video_idを直接指定すれば今すぐ使えます。")
+
         clips = await loop.run_in_executor(
             None,
             lambda: suggest_clips_from_library(
