@@ -202,6 +202,29 @@ async def health_check():
     return {"status": "ok"}
 
 
+@app.get("/api/export-videos")
+async def export_videos():
+    """動画データをエクスポート（ローカルスクリプト用）"""
+    if not search_engine:
+        raise HTTPException(status_code=503, detail="動画データ読み込み中です")
+    # transcriptは大きいので除外し、IDとメタデータのみ返す
+    videos = []
+    for v in search_engine.videos:
+        videos.append({
+            "video_id": v["video_id"],
+            "title": v["title"],
+            "description": v.get("description", ""),
+            "upload_date": v.get("upload_date", ""),
+            "duration_seconds": v.get("duration_seconds", 0),
+            "view_count": v.get("view_count", 0),
+            "url": v.get("url", ""),
+            "thumbnail": v.get("thumbnail", ""),
+            "categories": v.get("categories", []),
+            "transcript": v.get("transcript"),
+        })
+    return JSONResponse(content=videos)
+
+
 # ─── ショート動画クリップ提案 API ─────────────────────────
 
 class ClipSuggestRequest(BaseModel):
