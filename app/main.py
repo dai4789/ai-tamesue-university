@@ -217,30 +217,42 @@ async def suggest_clips_api(req: ClipSuggestRequest, request: Request):
 
     YouTube長尺動画からAIが最適な30-60秒クリップを提案します。
     Instagram Reels / TikTok / YouTube Shorts 向け。
+    既に取得済みの字幕データを使用するため、追加のYouTubeリクエスト不要。
     """
     import asyncio
     from .clip_suggester import suggest_clips, suggest_clips_from_library
 
+    if not search_engine:
+        raise HTTPException(status_code=503, detail="動画データ読み込み中です。しばらくお待ちください。")
+
     loop = asyncio.get_event_loop()
 
     if req.video_id:
-        # 特定の動画IDが指定された場合、ライブラリ読み込み完了を待たずに処理可能
-        video_title = req.video_id  # デフォルト
-        if search_engine:
-            for v in search_engine.videos:
-                if v["video_id"] == req.video_id:
-                    video_title = v["title"]
-                    break
+        # 特定の動画を分析
+        video_data = None
+        for v in search_engine.videos:
+            if v["video_id"] == req.video_id:
+                video_data = v
+                break
+
+        if not video_data:
+            raise HTTPException(status_code=404, detail="動画が見つかりません")
+
+        if not video_data.get("transcript"):
+            raise HTTPException(status_code=400, detail="この動画には字幕データがありません")
 
         clips = await loop.run_in_executor(
             None,
-            lambda: suggest_clips(req.video_id, video_title, req.n_clips),
+            lambda: suggest_clips(
+                req.video_id,
+                video_data["title"],
+                video_data["transcript"],
+                video_data.get("duration_seconds", 0),
+                req.n_clips,
+            ),
         )
     else:
-        # ライブラリから自動選択する場合は読み込み完了が必要
-        if not search_engine:
-            raise HTTPException(status_code=503, detail="サーバー準備中です。video_idを直接指定すれば今すぐ使えます。")
-
+        # 人気動画から自動提案
         clips = await loop.run_in_executor(
             None,
             lambda: suggest_clips_from_library(
