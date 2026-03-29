@@ -109,7 +109,22 @@ def fetch_and_update_videos():
                 })
 
         # 4. トランスクリプト取得
-        if has_transcript_api:
+        # クラウド環境ではYouTubeがIPをブロックするため、新規取得をスキップし
+        # 既存のトランスクリプトデータのみを使用する
+        skip_new_transcripts = os.environ.get("SKIP_NEW_TRANSCRIPTS", "true").lower() == "true"
+
+        if skip_new_transcripts:
+            print("⏩ 既存トランスクリプトを再利用（新規取得スキップ）")
+            for video in videos:
+                vid = video["video_id"]
+                if vid in existing_videos:
+                    video["transcript"] = existing_videos[vid].get("transcript")
+                    video["categories"] = existing_videos[vid].get("categories", [])
+                else:
+                    video["transcript"] = None
+                    video["categories"] = _categorize(
+                        video["title"], video.get("description", ""), None)
+        elif has_transcript_api:
             ytt_api = YouTubeTranscriptApi()
             for i, video in enumerate(videos):
                 vid = video["video_id"]
