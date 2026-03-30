@@ -100,8 +100,24 @@ def auto_install_ffmpeg():
         return None
 
 
+def fix_ssl_for_old_python():
+    """Python 3.9 + LibreSSL環境でのSSLエラーを修正"""
+    try:
+        import ssl
+        if "LibreSSL" in ssl.OPENSSL_VERSION:
+            print("⚙️ 古いSSL検出、urllib3をダウングレード中...")
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "urllib3<2"],
+                capture_output=True, check=True,
+            )
+            print("  ✅ SSL互換性を修正しました")
+    except Exception:
+        pass
+
+
 def check_tools():
     """必要ツールの存在確認（自動インストール付き）"""
+    fix_ssl_for_old_python()
     for name in ["yt-dlp", "ffmpeg"]:
         path = find_tool(name)
 
