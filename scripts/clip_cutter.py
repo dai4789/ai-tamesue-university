@@ -237,18 +237,23 @@ def download_video(video_id, output_path):
         return True
 
     print(f"  ⬇️ 動画ダウンロード中: {video_id}")
+    # SSL問題を回避するため環境変数を設定
+    env = os.environ.copy()
+    env["PYTHONHTTPSVERIFY"] = "0"
     try:
-        subprocess.run([
+        result = subprocess.run([
             TOOL_PATHS["yt-dlp"],
-            "-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+            "--no-check-certificates",
+            "-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
             "--merge-output-format", "mp4",
             "-o", output_path,
             url,
-        ], check=True, capture_output=True)
+        ], check=True, capture_output=True, env=env)
         print(f"  ✅ ダウンロード完了")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"  ❌ ダウンロード失敗: {e.stderr.decode()[:200]}")
+        stderr = e.stderr.decode() if e.stderr else ""
+        print(f"  ❌ ダウンロード失敗: {stderr[:300]}")
         return False
 
 
