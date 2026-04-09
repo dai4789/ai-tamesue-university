@@ -17,6 +17,9 @@ numpy>=1.24.0
 # Anthropic API for response generation
 anthropic==0.40.0
 
+# OpenAI API for embeddings
+openai>=1.0.0
+
 # LINE Bot SDK
 line-bot-sdk==3.11.0
 

@@ -27,7 +27,7 @@ from youtube_transcript_api._errors import (
 CHANNEL_URL = "https://www.youtube.com/@tamesuedai"
 OUTPUT_DIR = Path(__file__).parent.parent / "data"
 OUTPUT_FILE = OUTPUT_DIR / "videos.json"
-MAX_VIDEOS = 500  # 取得する最大動画数
+MAX_VIDEOS = 2000  # 全動画を取得
 
 
 def get_video_list_via_ytdlp(channel_url: str, max_videos: int = MAX_VIDEOS) -> list[dict]:
@@ -80,7 +80,7 @@ def get_video_list_via_ytdlp(channel_url: str, max_videos: int = MAX_VIDEOS) -> 
     return videos
 
 
-def fetch_transcript(video_id: str) -> str | None:
+def fetch_transcript(video_id: str):
     """動画のトランスクリプト（字幕）を取得"""
     ytt_api = YouTubeTranscriptApi()
     try:
@@ -107,7 +107,7 @@ def fetch_transcript(video_id: str) -> str | None:
         return None
 
 
-def categorize_video(title: str, description: str, transcript: str | None) -> list[str]:
+def categorize_video(title: str, description: str, transcript) -> list[str]:
     """動画のカテゴリを推定（キーワードベース）"""
     text = f"{title} {description} {transcript or ''}".lower()
     categories = []

@@ -224,6 +224,88 @@ async def export_videos():
     return JSONResponse(content=videos)
 
 
+# ─── SNS投稿文生成 API ────────────────────────────────────
+
+class SNSGenerateRequest(BaseModel):
+    video_url: str = Field(..., description="YouTube動画URL")
+    title: str = Field("", description="動画タイトル（省略時は自動取得）")
+
+
+@app.post("/api/generate-sns")
+async def generate_sns(req: SNSGenerateRequest, request: Request):
+    """
+    SNS投稿文一括生成API
+
+    YouTube動画URLから字幕を取得し、
+    X / Instagram Reels / TikTok / Note 用の投稿文を生成。
+    """
+    import asyncio
+    import subprocess
+    import re
+
+    client_ip = request.client.host if request.client else "unknown"
+    if not rate_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="リクエストが多すぎます")
+
+    if not ai_responder:
+        raise HTTPException(status_code=503, detail="サーバー準備中です")
+
+    # video_idを抽出
+    match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})', req.video_url)
+    if not match:
+        raise HTTPException(status_code=400, detail="有効なYouTube URLを入力してください")
+    video_id = match.group(1)
+
+    # 字幕取得（search_engineにあればそちらを使う）
+    transcript = ""
+    title = req.title
+    video_data = search_engine.get_video_details(video_id) if search_engine else None
+    if video_data:
+        transcript = video_data.get("transcript", "")
+        if not title:
+            title = video_data.get("title", "")
+
+    # 字幕がなければyt-dlpで取得
+    if not transcript:
+        loop = asyncio.get_event_loop()
+        try:
+            result = await loop.run_in_executor(None, lambda: subprocess.run(
+                ["yt-dlp", "--write-auto-sub", "--sub-lang", "ja",
+                 "--skip-download", "--sub-format", "vtt",
+                 "-o", f"/tmp/sns_{video_id}",
+                 f"https://www.youtube.com/watch?v={video_id}"],
+                capture_output=True, text=True, timeout=60,
+            ))
+            vtt_file = f"/tmp/sns_{video_id}.ja.vtt"
+            if os.path.exists(vtt_file):
+                with open(vtt_file, "r") as f:
+                    lines = f.readlines()
+                transcript = " ".join(
+                    line.strip() for line in lines
+                    if line.strip() and not line.startswith(("WEBVTT", "Kind:", "Language:"))
+                    and not re.match(r'^\d\d:\d\d', line.strip())
+                    and not line.strip().startswith("<")
+                    and "align:" not in line
+                )
+        except Exception as e:
+            print(f"字幕取得エラー: {e}")
+
+    if not transcript:
+        raise HTTPException(status_code=400, detail="字幕を取得できませんでした")
+
+    if not title:
+        title = f"動画 {video_id}"
+
+    # SNS投稿文生成
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        None,
+        lambda: ai_responder.generate_sns_posts(req.video_url, transcript, title),
+    )
+
+    return result
+
+
 # ─── ショート動画クリップ提案 API ─────────────────────────
 
 class ClipSuggestRequest(BaseModel):

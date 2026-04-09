@@ -6,15 +6,18 @@
     <title>AI為末大学 | Tamesue Academy</title>
     <style>
         :root {
-            --primary: #1a73e8;
-            --primary-dark: #1557b0;
-            --accent: #ff4444;
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --text: #202124;
-            --text-secondary: #5f6368;
-            --border: #e0e0e0;
-            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --navy: #1a1f3d;
+            --navy-light: #2a3050;
+            --yellow: #f5d623;
+            --yellow-soft: #fdf8e0;
+            --yellow-hover: #e6c81a;
+            --bg: #f7f6f3;
+            --card: #ffffff;
+            --text: #1a1f3d;
+            --text-sub: #6b6f80;
+            --text-faint: #9b9eb0;
+            --border: #e8e8e8;
+            --shadow: 0 2px 16px rgba(26,31,61,0.06);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -26,66 +29,74 @@
 
         /* ヘッダー */
         .header {
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            padding: 16px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            background: var(--navy);
+            padding: 24px 0;
+            text-align: center;
         }
-        .header-inner {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .header .logo-mark {
+            font-size: 32px;
+            color: var(--yellow);
+            font-weight: 900;
+            letter-spacing: 8px;
         }
-        .logo { font-size: 28px; }
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text);
-        }
-        .header h1 span {
-            color: var(--primary);
-        }
-        .badge {
-            background: var(--primary);
-            color: white;
+        .header .logo-sub {
             font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 4px;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+        .header .ai-tag {
+            display: inline-block;
+            background: var(--yellow);
+            color: var(--navy);
+            font-size: 10px;
+            font-weight: 700;
             padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
+            border-radius: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+            letter-spacing: 1px;
         }
 
-        /* メインコンテンツ */
+        /* メイン */
         .main {
-            max-width: 800px;
+            max-width: 720px;
             margin: 0 auto;
-            padding: 24px 20px 120px;
+            padding: 0 20px 140px;
         }
 
-        /* 説明エリア */
+        /* イントロ */
         .intro {
             text-align: center;
-            padding: 40px 20px 32px;
+            padding: 48px 0 40px;
         }
-        .intro h2 {
-            font-size: 24px;
-            margin-bottom: 8px;
+        .intro .catchphrase {
+            font-size: 22px;
             font-weight: 700;
+            color: var(--navy);
+            letter-spacing: 2px;
         }
-        .intro p {
-            color: var(--text-secondary);
+        .intro .description {
             font-size: 14px;
-            line-height: 1.7;
+            color: var(--text-sub);
+            margin-top: 14px;
+            line-height: 1.8;
         }
-        .stats {
+        .intro .stats {
+            font-size: 12px;
+            color: var(--text-faint);
+            margin-top: 10px;
+        }
+        .intro .play-running {
+            display: inline-block;
             margin-top: 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--text-faint);
+            border: 1px solid var(--border);
+            padding: 4px 16px;
+            border-radius: 20px;
         }
 
         /* サンプル質問 */
@@ -94,22 +105,22 @@
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 24px;
         }
         .sample-btn {
-            background: var(--card-bg);
+            background: var(--card);
             border: 1px solid var(--border);
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 22px;
             font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
-            color: var(--text);
+            color: var(--text-sub);
         }
         .sample-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: #e8f0fe;
+            border-color: var(--navy);
+            color: var(--navy);
+            background: var(--yellow-soft);
         }
 
         /* 入力エリア */
@@ -118,90 +129,108 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--card-bg);
+            background: var(--card);
             border-top: 1px solid var(--border);
             padding: 16px 20px;
             z-index: 100;
         }
         .input-inner {
-            max-width: 800px;
+            max-width: 720px;
             margin: 0 auto;
             display: flex;
             gap: 10px;
         }
         .input-inner input {
             flex: 1;
-            padding: 12px 16px;
+            padding: 13px 18px;
             border: 2px solid var(--border);
-            border-radius: 24px;
+            border-radius: 26px;
             font-size: 15px;
             outline: none;
             transition: border-color 0.2s;
+            background: var(--bg);
         }
         .input-inner input:focus {
-            border-color: var(--primary);
+            border-color: var(--navy);
+        }
+        .input-inner input::placeholder {
+            color: var(--text-faint);
         }
         .input-inner button {
-            background: var(--primary);
+            background: var(--navy);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 24px;
-            font-size: 15px;
+            padding: 13px 26px;
+            border-radius: 26px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             white-space: nowrap;
         }
         .input-inner button:hover {
-            background: var(--primary-dark);
+            background: var(--navy-light);
         }
         .input-inner button:disabled {
-            background: #ccc;
+            background: var(--text-faint);
             cursor: not-allowed;
         }
 
-        /* 結果エリア */
-        .results {
-            margin-top: 16px;
-        }
+        /* 結果 */
+        .results { margin-top: 8px; }
 
-        /* AI コメント */
+        /* AIコメント */
         .ai-comment {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px 24px;
+            background: var(--card);
+            border-radius: 14px;
+            padding: 24px 28px;
             margin-bottom: 16px;
             box-shadow: var(--shadow);
-            border-left: 4px solid var(--primary);
+            border-left: 4px solid var(--yellow);
         }
         .ai-comment .label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .ai-comment .label-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--navy);
+        }
+        .ai-comment .label-text {
             font-size: 12px;
             font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: var(--navy);
+            letter-spacing: 1px;
         }
         .ai-comment .text {
             font-size: 15px;
-            line-height: 1.8;
+            line-height: 1.9;
             color: var(--text);
         }
 
-        /* 動画カード */
+        /* 動画セクション */
         .video-section-title {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: var(--text-faint);
             margin: 24px 0 12px;
-            padding-left: 4px;
+            letter-spacing: 1px;
         }
         .video-card {
-            background: var(--card-bg);
-            border-radius: 12px;
+            background: var(--card);
+            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             box-shadow: var(--shadow);
             transition: transform 0.2s;
         }
@@ -212,14 +241,13 @@
             text-decoration: none;
             color: inherit;
             display: flex;
-            gap: 0;
         }
         .video-thumb {
-            width: 200px;
-            min-width: 200px;
-            height: 112px;
+            width: 180px;
+            min-width: 180px;
+            height: 101px;
             object-fit: cover;
-            background: #eee;
+            background: var(--bg);
         }
         .video-info {
             padding: 12px 16px;
@@ -229,107 +257,135 @@
             justify-content: center;
         }
         .video-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             margin-bottom: 6px;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .video-reason {
-            font-size: 12px;
-            color: var(--primary);
             line-height: 1.5;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            color: var(--text);
+        }
+        .video-reason {
+            font-size: 12px;
+            color: var(--navy);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            opacity: 0.7;
         }
         .video-meta {
             font-size: 11px;
-            color: var(--text-secondary);
+            color: var(--text-faint);
             margin-top: 4px;
         }
 
         /* ローディング */
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 48px;
         }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
+        .dots {
+            display: inline-flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--yellow);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
+            animation: pulse 1.2s ease-in-out infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
         .loading-text {
-            color: var(--text-secondary);
-            font-size: 14px;
+            color: var(--text-faint);
+            font-size: 13px;
         }
 
         /* エラー */
         .error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 12px;
-            padding: 16px 20px;
-            color: #dc2626;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 24px;
+            color: var(--text-sub);
             font-size: 14px;
+        }
+
+        /* フッター */
+        .footer {
+            text-align: center;
+            padding: 24px 0 8px;
+        }
+        .footer-tag {
+            display: inline-block;
+            font-size: 11px;
+            color: var(--text-faint);
+            letter-spacing: 2px;
+            border: 1px solid var(--border);
+            padding: 4px 14px;
+            border-radius: 16px;
         }
 
         /* レスポンシブ */
         @media (max-width: 600px) {
+            .intro .catchphrase { font-size: 18px; }
             .video-card a { flex-direction: column; }
             .video-thumb { width: 100%; height: 180px; min-width: auto; }
-            .intro h2 { font-size: 20px; }
+            .ai-comment { padding: 18px 18px; }
             .samples { gap: 6px; }
             .sample-btn { font-size: 12px; padding: 6px 12px; }
+            .header .logo-mark { font-size: 24px; letter-spacing: 6px; }
         }
     </style>
 </head>
 <body>
-    <!-- ヘッダー -->
     <div class="header">
-        <div class="header-inner">
-            <div class="logo">🎓</div>
-            <h1>AI<span>為末大学</span></h1>
-            <div class="badge">AI</div>
-        </div>
+        <div class="logo-mark">為末大学 <span class="ai-tag">AI</span></div>
+        <div class="logo-sub">TAMESUE ACADEMY</div>
     </div>
 
-    <!-- メインコンテンツ -->
     <div class="main">
         <div class="intro">
-            <h2>何でも聞いてください</h2>
-            <p>走り方、トレーニング、メンタル、子どもの運動…<br>
-            為末大学の動画から、あなたの質問にお答えします。</p>
-            <div class="stats">📹 {{ total_videos }} 本の動画から検索</div>
+            <div class="catchphrase">一歩一歩に夢中になる</div>
+            <p class="description">
+                走り方、身体のこと、学びのこと、あそびのこと。<br>
+                何でも聞いてください。一緒に考えましょう。
+            </p>
+            <div class="stats">{{ total_videos }} 本の動画の知見をもとに回答します</div>
+            <div class="play-running">#PlayRunning</div>
 
             <div class="samples">
-                <button class="sample-btn" onclick="askSample(this)">速く走るコツは？</button>
+                <button class="sample-btn" onclick="askSample(this)">時計を外して走ると何が変わる？</button>
+                <button class="sample-btn" onclick="askSample(this)">速く走ろうとすると遅くなるのはなぜ？</button>
                 <button class="sample-btn" onclick="askSample(this)">子どもの足が遅いのですが</button>
-                <button class="sample-btn" onclick="askSample(this)">試合で緊張してしまう</button>
-                <button class="sample-btn" onclick="askSample(this)">腕振りのポイント</button>
-                <button class="sample-btn" onclick="askSample(this)">怪我の予防法</button>
-                <button class="sample-btn" onclick="askSample(this)">モチベーションが続かない</button>
+                <button class="sample-btn" onclick="askSample(this)">走ると膝が痛くなる</button>
+                <button class="sample-btn" onclick="askSample(this)">練習のモチベーションが続かない</button>
+                <button class="sample-btn" onclick="askSample(this)">蹴らない走り方とは？</button>
             </div>
         </div>
 
         <div id="results" class="results"></div>
+
+        <div class="footer">
+            <div class="footer-tag">#PlayRunning</div>
+        </div>
     </div>
 
-    <!-- 入力エリア -->
     <div class="input-area">
         <div class="input-inner">
-            <input type="text" id="question" placeholder="質問を入力してください..."
+            <input type="text" id="question" placeholder="何でも聞いてください"
                    onkeydown="if(event.key==='Enter')askQuestion()">
-            <button id="askBtn" onclick="askQuestion()">質問する</button>
+            <button id="askBtn" onclick="askQuestion()">聞く</button>
         </div>
     </div>
 
@@ -347,12 +403,11 @@
             const q = questionEl.value.trim();
             if (!q) return;
 
-            // UI更新
             askBtn.disabled = true;
             resultsEl.innerHTML = `
                 <div class="loading">
-                    <div class="spinner"></div>
-                    <div class="loading-text">考え中...</div>
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <div class="loading-text">考えています...</div>
                 </div>
             `;
 
@@ -362,18 +417,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question: q, n_videos: 3 }),
                 });
-
-                if (!resp.ok) {
-                    throw new Error(`Error: ${resp.status}`);
-                }
-
+                if (!resp.ok) throw new Error(resp.status);
                 const data = await resp.json();
                 renderResults(data);
             } catch (err) {
                 resultsEl.innerHTML = `
                     <div class="error">
-                        エラーが発生しました: ${err.message}<br>
-                        しばらくしてからもう一度お試しください。
+                        申し訳ありません。うまく回答できませんでした。<br>
+                        少し時間をおいてもう一度お試しください。
                     </div>
                 `;
             } finally {
@@ -383,18 +434,17 @@
 
         function renderResults(data) {
             let html = '';
-
-            // AIコメント
             html += `
                 <div class="ai-comment">
-                    <div class="label">🎓 AI為末大学の回答</div>
+                    <div class="label">
+                        <div class="label-icon">為</div>
+                        <div class="label-text">AI 為末大学</div>
+                    </div>
                     <div class="text">${escapeHtml(data.comment)}</div>
                 </div>
             `;
-
-            // 動画推薦
             if (data.recommended_videos && data.recommended_videos.length > 0) {
-                html += '<div class="video-section-title">📹 おすすめ動画</div>';
+                html += '<div class="video-section-title">おすすめ動画</div>';
                 for (const v of data.recommended_videos) {
                     html += `
                         <div class="video-card">
@@ -402,10 +452,11 @@
                                 <img class="video-thumb"
                                      src="${escapeHtml(v.thumbnail)}"
                                      alt="${escapeHtml(v.title)}"
+                                     loading="lazy"
                                      onerror="this.src='https://img.youtube.com/vi/${escapeHtml(v.video_id)}/hqdefault.jpg'">
                                 <div class="video-info">
                                     <div class="video-title">${escapeHtml(v.title)}</div>
-                                    <div class="video-reason">📌 ${escapeHtml(v.reason)}</div>
+                                    <div class="video-reason">${escapeHtml(v.reason)}</div>
                                     ${v.categories && v.categories.length ? `<div class="video-meta">${v.categories.join(' / ')}</div>` : ''}
                                 </div>
                             </a>
@@ -413,7 +464,6 @@
                     `;
                 }
             }
-
             resultsEl.innerHTML = html;
             resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
