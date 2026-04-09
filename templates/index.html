@@ -399,15 +399,20 @@
             askQuestion();
         }
 
+        let isAsking = false;
+
         async function askQuestion() {
             const q = questionEl.value.trim();
-            if (!q) return;
+            if (!q || isAsking) return;
 
+            isAsking = true;
             askBtn.disabled = true;
+            questionEl.value = '';
+            questionEl.blur();
             resultsEl.innerHTML = `
                 <div class="loading">
                     <div class="dots"><span></span><span></span><span></span></div>
-                    <div class="loading-text">考えています...</div>
+                    <div class="loading-text">「${escapeHtml(q)}」について考えています...</div>
                 </div>
             `;
 
@@ -429,6 +434,7 @@
                 `;
             } finally {
                 askBtn.disabled = false;
+                isAsking = false;
             }
         }
 
