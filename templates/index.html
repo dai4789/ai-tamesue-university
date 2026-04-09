@@ -384,7 +384,8 @@
     <div class="input-area">
         <div class="input-inner">
             <input type="text" id="question" placeholder="何でも聞いてください"
-                   onkeydown="if(event.key==='Enter')askQuestion()">
+                   onkeydown="if(event.key==='Enter' && !event.isComposing)askQuestion()"
+                   oncompositionend="">
             <button id="askBtn" onclick="askQuestion()">聞く</button>
         </div>
     </div>
